@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+
+  osticket:
+    image: campbellsoftwaresolutions/osticket
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=osticket
+      - MYSQL_USER=osticket
+      - MYSQL_PASSWORD=0T1cket
+      - INSTALL_SECRET=secret
+      - CRON_INTERVAL=1
+
+      - LANGUAGE=pt
+    ports:
+      - "80:80"
+    networks:
+      - proxy_net
+
+  mysql:
+    image: mariadb
+    environment:
+       - MYSQL_RANDOM_ROOT_PASSWORD=true
+       - MYSQL_DATABASE=osticket
+       - MYSQL_USER=osticket
+       - MYSQL_PASSWORD=0T1cket
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - proxy_net
+
+volumes:
+  db_data:
+
+networks:
+  proxy_net:

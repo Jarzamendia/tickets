@@ -1,0 +1,128 @@
+version: '3.3'
+
+services:
+
+  zammad-backup:
+    image: zammad/zammad-docker-compose:zammad-postgresql-2.9.0-1
+    command: ["zammad-backup"]
+    entrypoint: /usr/local/bin/backup.sh
+    volumes:
+      - zammad-backup:/var/tmp/zammad
+      - zammad-data:/opt/zammad
+    networks:
+      - proxy_net
+
+  zammad-elasticsearch:
+    image: zammad/zammad-docker-compose:zammad-elasticsearch-2.9.0-1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - proxy_net
+
+  zammad-init:
+    image: jarzamendia/zammad
+    command: ["zammad-init"]
+    volumes:
+      - zammad-data:/opt/zammad
+    networks:
+      - proxy_net
+    environment:
+      - ELASTICSEARCH_HOST=zammad-elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_SCHEMA=http
+      - ELASTICSEARCH_SSL_VERIFY=true
+      - MEMCACHED_HOST=zammad-memcached
+      - MEMCACHED_PORT=11211
+      - POSTGRESQL_HOST=zammad-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=zammad-postgres
+      - POSTGRESQL_PASS=P@ssw0rd
+      - POSTGRESQL_DB=production
+      - POSTGRESQL_DB_CREATE=true
+      - ZAMMAD_RAILSSERVER_HOST=zammad-railsserver
+      - ZAMMAD_RAILSSERVER_PORT=3000
+      - ZAMMAD_WEBSOCKET_HOST=zammad-websocket
+      - ZAMMAD_WEBSOCKET_PORT=6042
+      - NGINX_SERVER_NAME=zammad.ms.gov.br
+
+  zammad-memcached:
+    image: zammad/zammad-docker-compose:zammad-memcached-2.9.0-1
+    command: ["zammad-memcached"]
+    networks:
+      - proxy_net
+
+  zammad-nginx:
+    image: jarzamendia/zammad
+    command: ["zammad-nginx"]
+    volumes:
+      - zammad-data:/opt/zammad
+    ports:
+      - "80:80"
+    networks:
+      - proxy_net
+
+  zammad-postgresql:
+    image: zammad/zammad-docker-compose:zammad-postgresql-2.9.0-1
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    networks:
+      - proxy_net
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=P@ssw0rd
+
+  zammad-railsserver:
+    image: jarzamendia/zammad
+    command: ["zammad-railsserver"]
+    volumes:
+      - zammad-data:/opt/zammad
+    networks:
+      - proxy_net
+    environment:
+      - ELASTICSEARCH_HOST=zammad-elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_SCHEMA=http
+      - ELASTICSEARCH_SSL_VERIFY=true
+      - MEMCACHED_HOST=zammad-memcached
+      - MEMCACHED_PORT=11211
+      - POSTGRESQL_HOST=zammad-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=zammad-postgres
+      - POSTGRESQL_PASS=P@ssw0rd
+      - POSTGRESQL_DB=production
+      - POSTGRESQL_DB_CREATE=true
+      - ZAMMAD_RAILSSERVER_HOST=zammad-railsserver
+      - ZAMMAD_RAILSSERVER_PORT=3000
+      - ZAMMAD_WEBSOCKET_HOST=zammad-websocket
+      - ZAMMAD_WEBSOCKET_PORT=6042
+      - NGINX_SERVER_NAME=zammad.ms.gov.br
+
+  zammad-scheduler:
+    image: jarzamendia/zammad
+    command: ["zammad-scheduler"]
+    volumes:
+      - zammad-data:/opt/zammad
+    networks:
+      - proxy_net
+
+  zammad-websocket:
+    image: jarzamendia/zammad
+    command: ["zammad-websocket"]
+    volumes:
+      - zammad-data:/opt/zammad
+    networks:
+      - proxy_net
+
+networks:
+  proxy_net:
+    external: true
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  postgresql-data:
+    driver: local
+  zammad-backup:
+    driver: local
+  zammad-data:
+    driver: local
